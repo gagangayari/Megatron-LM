@@ -32,7 +32,15 @@ def build_tokenizer(args):
         tokenizer = _GPT2BPETokenizer(args.vocab_file, args.merge_file)
     elif args.tokenizer_type == 'SentencePieceTokenizer':
         assert args.tokenizer_model is not None
-        tokenizer = _SentencePieceTokenizer(args.tokenizer_model, vocab_extra_ids=args.vocab_extra_ids)
+        tokenizer = _SentencePieceTokenizer(
+            args.tokenizer_model,
+            vocab_extra_ids=args.vocab_extra_ids,
+            ul2_denoiser_tokens=[
+                args.ul2_r_denoiser_token,
+                args.ul2_s_denoiser_token,
+                args.ul2_x_denoiser_token,
+            ],
+        )
     else:
         raise NotImplementedError('{} tokenizer is not '
                                   'implemented.'.format(args.tokenizer_type))
@@ -286,15 +294,15 @@ class _GPT2BPETokenizer(AbstractTokenizer):
 class _SentencePieceTokenizer(AbstractTokenizer):
     """SentencePieceTokenizer-Megatron wrapper"""
 
-    def __init__(self, model_file, vocab_extra_ids=0):
+    def __init__(self, model_file, vocab_extra_ids=0, ul2_denoiser_tokens=[]):
         name = 'SentencePieceTokenizer'
         super().__init__(name)
 
         import sentencepiece
         self._tokenizer = sentencepiece.SentencePieceProcessor(model_file=model_file)
-        self._initialize(vocab_extra_ids)
+        self._initialize(vocab_extra_ids, ul2_denoiser_tokens)
 
-    def _initialize(self, vocab_extra_ids):
+    def _initialize(self, vocab_extra_ids, ul2_denoiser_tokens):
         self._vocab = {}
         self._inv_vocab = {}
 
@@ -302,6 +310,7 @@ class _SentencePieceTokenizer(AbstractTokenizer):
         self._inv_special_tokens = {}
 
         self._t5_tokens = []
+        self._ul2_tokens = []
 
         for i in range(len(self._tokenizer)):
             t = self._tokenizer.id_to_piece(i)
@@ -353,6 +362,10 @@ class _SentencePieceTokenizer(AbstractTokenizer):
             t = "<extra_id_{}>".format(i)
             _add_special_token(t)
             self._t5_tokens += [t]
+
+        for t in ul2_denoiser_tokens:
+            _add_special_token(t)
+            self._ul2_tokens.append(t)
 
     @property
     def vocab_size(self):
@@ -447,3 +460,6 @@ class _SentencePieceTokenizer(AbstractTokenizer):
     def additional_special_tokens_ids(self):
         return [self.vocab[k] for k in self._t5_tokens]
 
+    @property
+    def ul2_token_ids(self):
+        return [self.vocab[k] for k in self._ul2_tokens]
