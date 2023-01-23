@@ -18,6 +18,15 @@ def build_tokenizer(args):
     if args.tokenizer_type != 'SentencePieceTokenizer':
         assert args.vocab_file is not None
 
+    if hasattr(args, '_is_ul2') and args._is_ul2:
+        ul2_denoiser_tokens = [
+            args.ul2_r_denoiser_token,
+            args.ul2_s_denoiser_token,
+            args.ul2_x_denoiser_token,
+        ]
+    else:
+        ul2_denoiser_tokens = []
+
     # Select and instantiate the tokenizer.
     if args.tokenizer_type == 'BertWordPieceLowerCase':
         tokenizer = _BertWordPieceTokenizer(vocab_file=args.vocab_file,
@@ -35,11 +44,7 @@ def build_tokenizer(args):
         tokenizer = _SentencePieceTokenizer(
             args.tokenizer_model,
             vocab_extra_ids=args.vocab_extra_ids,
-            ul2_denoiser_tokens=[
-                args.ul2_r_denoiser_token,
-                args.ul2_s_denoiser_token,
-                args.ul2_x_denoiser_token,
-            ],
+            ul2_denoiser_tokens=ul2_denoiser_tokens,
         )
     else:
         raise NotImplementedError('{} tokenizer is not '
