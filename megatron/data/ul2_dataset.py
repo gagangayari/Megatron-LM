@@ -2,12 +2,15 @@
 
 """UL2-style dataset."""
 
+import math
 import numpy as np
+import torch
 
 from megatron import get_tokenizer
 from megatron.data.dataset_utils import (
     create_masked_lm_predictions,
-    SamplingStyle
+    SamplingStyle,
+    get_samples_mapping
 )
 from megatron.data.t5_dataset import (
     LengthExceededError,
@@ -190,6 +193,8 @@ def build_training_sample(sample, target_seq_length,
     elif denoiser == 'S':
         sampling_style = SamplingStyle.UNIFORM
         prefix_lm = True
+        # The number of masked tokens should follow a uniform distribution with mean: masked_lm_prob * len(tokens)
+        # So we set the maximum number of masked tokens to double this value.
         max_predictions_per_seq = min(
             round(masked_lm_prob * len(tokens)) * 2 - 1,
             len(tokens) - 1,
@@ -231,6 +236,10 @@ def build_training_sample(sample, target_seq_length,
         )
 
         # Pad and convert to NumPy.
+        if len(tokens) > max_seq_length:
+            print(f"Truncating decoder-only sequence with denoiser {denoiser}: {len(tokens)} -> {max_seq_length}")
+            truncated = True
+            tokens = tokens[:max_seq_length]
         padding_length = max_seq_length - len(tokens)
         if padding_length < 0:
             raise LengthExceededError()
@@ -243,15 +252,27 @@ def build_training_sample(sample, target_seq_length,
             + labels
             + filler
         ), dtype=np.int64)
+        labels = labels[:max_seq_length]
 
         loss_mask = np.zeros(len(tokens), dtype=np.int64)
         labels_start_neg_index = -(num_labels + padding_length)
         labels_end_neg_index = -padding_length if padding_length > 0 else None
-        loss_mask[labels_start_neg_index:labels_end_neg_index] = 1
+        # loss_mask[labels_start_neg_index:labels_end_neg_index] = 1
+        labels_start_index = 1 + len(tokens_enc)
+        labels_end_index = 1 + len(tokens_enc) + num_labels
+        loss_mask[labels_start_index:labels_end_index] = 1
+
+        # DEBUG
+        start_index_sum = labels_start_index - labels_start_neg_index
+        end_index_sum = labels_end_index - labels_end_neg_index if labels_end_neg_index is not None else labels_end_index
+        if not truncated:
+            assert start_index_sum == len(tokens)
+            assert end_index_sum == len(tokens)
 
         dec_mask = make_history_mask(tokens)
         if is_prefix_lm(model_type):
-            dec_mask[:labels_start_neg_index, :labels_start_neg_index] = 1
+            # dec_mask[:labels_start_neg_index, :labels_start_neg_index] = 1
+            dec_mask[:labels_start_index, :labels_start_index] = 1
 
         train_sample = {
             'text': tokens,
