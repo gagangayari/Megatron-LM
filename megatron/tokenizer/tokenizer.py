@@ -23,9 +23,6 @@ def build_tokenizer(args):
         print('> building {} tokenizer ...'.format(args.tokenizer_type),
               flush=True)
 
-    if args.tokenizer_type != 'SentencePieceTokenizer':
-        assert args.vocab_file is not None
-
     if hasattr(args, '_is_ul2') and args._is_ul2:
         ul2_denoiser_tokens = [
             args.ul2_r_denoiser_token,
@@ -38,6 +35,8 @@ def build_tokenizer(args):
     # Select and instantiate the tokenizer.
     if args.tokenizer_type in ['BertWordPieceLowerCase', 'BertWordPieceCase', 'GPT2BPETokenizer', 'GPT2BPETokenizerWithFIM']:
         assert args.vocab_file is not None
+    elif args.tokenizer_type == "SentencePieceTokenizer":
+        assert args.tokenizer_model is not None
     else:
         assert args.tokenizer_file is not None
     if args.tokenizer_type == 'BertWordPieceLowerCase':
@@ -67,9 +66,15 @@ def build_tokenizer(args):
         tokenizer = _GPT2BPETokenizer(args.vocab_file, args.merge_file, special_tokens=[FIM_PREFIX, FIM_MIDDLE, FIM_SUFFIX, FIM_PAD])
     elif args.tokenizer_type == "TokenizerFromFile":
         assert args.tokenizer_file is not None
-        tokenizer = _HFTokenizer(args.tokenizer_file, special_tokens=[EOD])
+        tokenizer = _HFTokenizer(
+            args.tokenizer_file,
+            special_tokens=[EOD],
+            ul2_denoiser_tokens=ul2_denoiser_tokens,
+            vocab_extra_ids=args.vocab_extra_ids
+        )
     elif args.tokenizer_type == "TokenizerFromFileWithFIM":
         assert args.tokenizer_file is not None
+        assert args.vocab_extra_ids is None
         tokenizer = _HFTokenizer(args.tokenizer_file, special_tokens=[EOD, FIM_PREFIX, FIM_MIDDLE, FIM_SUFFIX, FIM_PAD])
     elif args.tokenizer_type == 'SentencePieceTokenizer':
         assert args.tokenizer_model is not None
@@ -387,19 +392,48 @@ class _GPT2BPETokenizer(AbstractTokenizer):
 class _HFTokenizer(AbstractTokenizer):
     """HF Tokenizer."""
 
-    def __init__(self, tokenizer_file, special_tokens=None):
+    CLS = "<CLS>"
+    SEP = "<SEP>"
+    MASK = "<MASK>"
+    BOS = "<BOS>"
+    EOS = "<EOS>"
+    PAD = "<PAD>"
+
+    def __init__(self, tokenizer_file, ul2_denoiser_tokens=None, special_tokens=None, vocab_extra_ids=None):
         name = 'HF Tokenizer'
         super().__init__(name)
 
         special_tokens = special_tokens if special_tokens is not None else []
+        assert EOD in special_tokens
+        # For backward compatibility, other special tokens should come after EOD
+        # Append at the end of the special tokens:
+        special_tokens += [
+            _HFTokenizer.CLS, _HFTokenizer.SEP, _HFTokenizer.MASK, _HFTokenizer.BOS, _HFTokenizer.EOS, _HFTokenizer.PAD
+        ]
+        # Add UL2 tokens
+        special_tokens += ul2_denoiser_tokens if ul2_denoiser_tokens is not None else []
+        # add extra-token-ids
+        if vocab_extra_ids is not None:
+            self._t5_tokens = ["<extra_id_{}>".format(i) for i in range(vocab_extra_ids)]
+            special_tokens += self._t5_tokens
         self.tokenizer = PreTrainedTokenizerFast(tokenizer_file=tokenizer_file, errors='replace', max_len=None)
+        for tok in special_tokens:
+            assert tok not in self.tokenizer.vocab, f"Special token {tok} was already in vocab"
+        
         self.tokenizer.add_special_tokens({'additional_special_tokens': special_tokens})
-        self.eod_id = self.tokenizer.vocab[EOD]
+        self._eod_id = self.tokenizer.vocab[EOD]
         # Token->id mapping for additional special-tokens
         self.special_tokens = {
             tok: self.tokenizer.vocab[tok] for tok in special_tokens
         }
         self._inv_vocab = {v: k for k, v in self.tokenizer.vocab.items()}
+
+        self._cls_id = self.tokenizer.vocab[_HFTokenizer.CLS]
+        self._sep_id = self.tokenizer.vocab[_HFTokenizer.SEP]
+        self._mask_id = self.tokenizer.vocab[_HFTokenizer.MASK]
+        self._bos_id = self.tokenizer.vocab[_HFTokenizer.BOS]
+        self._eos_id = self.tokenizer.vocab[_HFTokenizer.EOS]
+        self._pad_id = self.tokenizer.vocab[_HFTokenizer.PAD]
 
     @property
     def vocab_size(self):
@@ -418,10 +452,47 @@ class _HFTokenizer(AbstractTokenizer):
 
     def detokenize(self, token_ids):
         return self.tokenizer.decode(token_ids)
+    
+    @property
+    def cls(self):
+        return self._cls_id
+
+    @property
+    def sep(self):
+        return self._sep_id
+
+    @property
+    def pad(self):
+        return self._pad_id
+
+    @property
+    def bos_token_id(self):
+        return self._bos_id
+
+    @property
+    def bos(self):
+        return self._bos_id
 
     @property
     def eod(self):
-        return self.eod_id
+        return self._eod_id
+
+    @property
+    def eos_token_id(self):
+        return self._eos_id
+
+    @property
+    def eos(self):
+        return self._eos_id
+
+    @property
+    def mask(self):
+        return self._mask_id
+    
+    @property
+    def additional_special_tokens_ids(self):
+        """T5 extra token_ids"""
+        return [self.vocab[k] for k in self._t5_tokens]
 
 
 class _SentencePieceTokenizer(AbstractTokenizer):
