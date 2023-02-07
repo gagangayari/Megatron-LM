@@ -286,9 +286,15 @@ def create_masked_lm_predictions(tokens,
         # plays nicely with the other probability distributions in terms
         # of math.
         normal_mean = (max_ngrams + 1) / 2
+        normal_std = np.sqrt(normal_mean)
         # However, we do not want to bound the maximum number of
         # n-grams.
-        max_ngrams = num_filtered_tokens - 1
+        # Let's truncate the Normal distribution at mu + 3*sigma (probability of sampling larger ngram is 0.1%)
+        # Thus, we avoid creating very large `cand_index_set`
+        max_ngrams = min(
+            num_filtered_tokens - 1,
+            round(normal_mean + 3 * normal_std)
+        )
 
     ngrams = np.arange(1, max_ngrams + 1, dtype=np.int64)
     if sampling_style is SamplingStyle.POISSON:
@@ -351,7 +357,7 @@ def create_masked_lm_predictions(tokens,
             n = np_rng.choice(ngrams[:len(cand_index_set)])
         elif sampling_style is SamplingStyle.NORMAL:
             n = round(np.clip(
-                np_rng.normal(loc=normal_mean),
+                np_rng.normal(loc=normal_mean, scale=normal_std),
                 1,
                 len(cand_index_set),
             ))
