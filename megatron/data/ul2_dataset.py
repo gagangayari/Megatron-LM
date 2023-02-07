@@ -34,7 +34,7 @@ def is_prefix_lm(ul2_model_type):
     return ul2_model_type is UL2ModelType.non_causal_decoder
 
 
-class UL2Dataset(T5Dataset):
+class UL2Dataset(torch.utils.data.Dataset):
 
     def __init__(self, name, indexed_dataset, data_prefix,
                  num_epochs, max_num_samples, model_type,
@@ -54,12 +54,13 @@ class UL2Dataset(T5Dataset):
             'denoising objectives'
         )
 
-        super().__init__(name, indexed_dataset, data_prefix,
-                         num_epochs, max_num_samples, None,
-                         max_seq_length, max_seq_length_dec,
-                         short_seq_prob, seed)
-
         # Params to store.
+        self.name = name
+        self.seed = seed
+        self.masked_lm_prob = None
+        self.max_seq_length = max_seq_length
+        self.max_seq_length_dec = max_seq_length_dec
+        # UL2 stuff
         self.model_type = model_type
         self.denoiser_ratios = [
             denoiser_ratio / sum(denoiser_ratios)
@@ -69,10 +70,30 @@ class UL2Dataset(T5Dataset):
         self.mean_span_lengths = mean_span_lengths
         self.mask_ratios = mask_ratios
 
+        # Dataset.
+        self.indexed_dataset = indexed_dataset
+
+        # Build the samples mapping.
+        self.samples_mapping = get_samples_mapping(self.indexed_dataset,
+                                                   data_prefix,
+                                                   num_epochs,
+                                                   max_num_samples,
+                                                   self.max_seq_length - 2, # account for added tokens
+                                                   short_seq_prob,
+                                                   self.seed,
+                                                   self.name,
+                                                   False)
+
         # Vocab stuff.
         tokenizer = get_tokenizer()
-        # Remove CLS token because we don't need it.
-        del self.cls_id
+        self.vocab_id_list = list(tokenizer.inv_vocab.keys())
+        self.vocab_id_to_token_dict = tokenizer.inv_vocab
+        self.sep_id = tokenizer.sep
+        self.mask_id = tokenizer.mask
+        self.pad_id = tokenizer.pad
+        self.bos_id = tokenizer.bos_token_id
+        self.eos_id = tokenizer.eos_token_id
+        # UL2 cls ids
         self.cls_ids = {
             denoiser: tokenizer.vocab[token]
             for (denoiser, token) in denoiser_tokens.items()
@@ -90,6 +111,9 @@ class UL2Dataset(T5Dataset):
         assert len(self.sentinel_tokens) > 0, \
             "Provide the argument --vocab-extra-ids 100 to the script"
 
+    def __len__(self):
+        return self.samples_mapping.shape[0]
+    
     def __getitem__(self, idx):
 
         start_index, end_index, seq_length = self.samples_mapping[idx]
