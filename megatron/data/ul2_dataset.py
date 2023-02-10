@@ -213,6 +213,7 @@ def build_training_sample(sample, target_seq_length,
     if denoiser == 'R' or denoiser == 'X':
         sampling_style = SamplingStyle.NORMAL
         prefix_lm = False
+        # -1 because the cls_id was added at the beginning of the sequence
         max_predictions_per_seq = len(tokens) - 1
     elif denoiser == 'S':
         sampling_style = SamplingStyle.UNIFORM
@@ -261,7 +262,6 @@ def build_training_sample(sample, target_seq_length,
 
         # Pad and convert to NumPy.
         if len(tokens) > max_seq_length:
-            print(f"Truncating decoder-only sequence with denoiser {denoiser}: {len(tokens)} -> {max_seq_length}")
             truncated = True
             tokens = tokens[:max_seq_length]
         padding_length = max_seq_length - len(tokens)
