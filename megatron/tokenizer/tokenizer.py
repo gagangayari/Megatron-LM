@@ -23,7 +23,7 @@ def build_tokenizer(args):
         print('> building {} tokenizer ...'.format(args.tokenizer_type),
               flush=True)
 
-    if hasattr(args, '_is_ul2') and args._is_ul2:
+    if args.is_ul2:
         ul2_denoiser_tokens = [
             args.ul2_r_denoiser_token,
             args.ul2_s_denoiser_token,

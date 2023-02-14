@@ -1145,6 +1145,8 @@ def _add_vision_args(parser):
 def _add_ul2_args(parser):
     group = parser.add_argument_group(title="UL2")
 
+    group.add_argument('--is-ul2', action='store_true', default=None,
+                        help="UL2 training objective. Will add the UL2 tokens to the tokenizer.")
     group.add_argument('--ul2-model-type', type=str, default='ED',
                        choices=['ED', 'ND', 'CD'],
                        help='What type of model to use for UL2 pretraining. '

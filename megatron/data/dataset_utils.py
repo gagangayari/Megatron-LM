@@ -238,7 +238,13 @@ def create_masked_lm_predictions(tokens,
                                  sampling_style=SamplingStyle.POISSON,
                                  prefix_lm=False):
     """Creates the predictions for the masked LM objective.
-    Note: Tokens here are vocab ids and not text tokens."""
+    Note: Tokens here are vocab ids and not text tokens.
+
+    Note: max_ngrams=1 and masked_lm_prob=1 in the prefix_lm case
+    mimics a fully causal objective. The reason is that this forces 
+    sampling n=1, and that the ngrams are in reverse order in terms
+    of length (the first ngram would contain the whole sequence)
+    """
     if not isinstance(sampling_style, SamplingStyle):
         sampling_style = SamplingStyle(sampling_style)
     # Backward-compatibility
