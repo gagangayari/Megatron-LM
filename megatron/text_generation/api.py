@@ -29,7 +29,9 @@ def generate_and_post_process(model,
                               stop_on_double_eol=False,
                               stop_on_eol=False,
                               prevent_newline_after_colon=False,
-                              random_seed=-1):
+                              random_seed=-1,
+                              prefix_lm=False,
+                              sep_in_bidirectional_context=True,):
     """Run inference and post-process outputs, i.e., detokenize,
     move to cpu and convert to list."""
 
@@ -49,7 +51,9 @@ def generate_and_post_process(model,
         stop_on_double_eol=stop_on_double_eol,
         stop_on_eol=stop_on_eol,
         prevent_newline_after_colon=prevent_newline_after_colon,
-        random_seed=random_seed)
+        random_seed=random_seed,
+        prefix_lm=prefix_lm,
+        sep_in_bidirectional_context=sep_in_bidirectional_context)
 
     # Only post-process on first stage.
     if mpu.is_pipeline_first_stage():
@@ -80,7 +84,9 @@ def generate(model,
              stop_on_double_eol=False,
              stop_on_eol=False,
              prevent_newline_after_colon=False,
-             random_seed=-1):
+             random_seed=-1,
+             prefix_lm=False,
+             sep_in_bidirectional_context=True,):
     """Given prompts and input parameters, run inference and return:
        tokens: prompts plus the generated tokens.
        lengths: length of the prompt + generations. Note that we can
@@ -141,7 +147,9 @@ def generate(model,
         use_eod_token_for_early_termination=use_eod_token_for_early_termination,
         stop_on_double_eol=stop_on_double_eol,
         stop_on_eol=stop_on_eol,
-        prevent_newline_after_colon=prevent_newline_after_colon)
+        prevent_newline_after_colon=prevent_newline_after_colon,
+        prefix_lm=prefix_lm,
+        sep_in_bidirectional_context=sep_in_bidirectional_context)
 
 def beam_search_and_post_process(model,
                                  prompts=None,

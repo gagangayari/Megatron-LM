@@ -95,7 +95,9 @@ def generate_tokens_probs_and_return_on_first_stage(
         use_eod_token_for_early_termination=True,
         stop_on_double_eol=False,
         stop_on_eol=False,
-        prevent_newline_after_colon=True
+        prevent_newline_after_colon=True,
+        prefix_lm=False,
+        sep_in_bidirectional_context=True,
         ):
     """Main token generation function.
     Arguments:
@@ -114,6 +116,9 @@ def generate_tokens_probs_and_return_on_first_stage(
         use_eod_token_for_early_termination: if True, do early termination if
             all the sequences have reached this token.
         prevent_newline_after_colon: if True, it will disable generating new line \n after :
+        prefix_lm: Is a prefix-LM model. Will use a bidirectional attention mask over the input prompt
+        sep_in_bidirectional_context: if False, the last token of the prompt will be excluded from the 
+            bidirectional mask. This assumes that <SEP> is indeed the last token of each prompt.
     Note: Outside of model, other parameters only need to be available on
           rank 0.
     Outputs: Note that is size is adjusted to a lower value than
@@ -176,6 +181,14 @@ def generate_tokens_probs_and_return_on_first_stage(
     with torch.no_grad():
         attention_mask, position_ids = _build_attention_mask_and_position_ids(
             tokens)
+        if prefix_lm:
+            # (1, 1, seq, seq) -> (batch, 1, seq, seq)
+            micro_batch_size, max_seq_len = tokens.size()
+            attention_mask = attention_mask.repeat(micro_batch_size, 1, 1, 1)
+            for idx, example_length in enumerate(lengths):
+                bidirectional_block_size = example_length if sep_in_bidirectional_context else example_length - 1
+                # No masking in the bidirectional block
+                attention_mask[idx, :, :bidirectional_block_size, :bidirectional_block_size] = False
         prev_context_length = 0
         for context_length in range(min_prompt_length, max_sequence_length):
 
