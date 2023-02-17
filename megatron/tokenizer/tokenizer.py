@@ -63,6 +63,7 @@ def build_tokenizer(args):
     # TODO: Should probably add a check that we are doing either FIM or UL2, not both.
     elif args.tokenizer_type == 'GPT2BPETokenizerWithFIM':
         assert args.merge_file is not None
+        assert args.vocab_extra_ids == 0, "Are you sure you want to use the FIM tokenizer? it seems that vocab-extra-ids was set >0"
         tokenizer = _GPT2BPETokenizer(args.vocab_file, args.merge_file, special_tokens=[FIM_PREFIX, FIM_MIDDLE, FIM_SUFFIX, FIM_PAD])
     elif args.tokenizer_type == "TokenizerFromFile":
         assert args.tokenizer_file is not None
@@ -74,7 +75,7 @@ def build_tokenizer(args):
         )
     elif args.tokenizer_type == "TokenizerFromFileWithFIM":
         assert args.tokenizer_file is not None
-        assert args.vocab_extra_ids is None
+        assert args.vocab_extra_ids == 0, "Are you sure you want to use the FIM tokenizer? it seems that vocab-extra-ids was set >0"
         tokenizer = _HFTokenizer(args.tokenizer_file, special_tokens=[EOD, FIM_PREFIX, FIM_MIDDLE, FIM_SUFFIX, FIM_PAD])
     elif args.tokenizer_type == 'SentencePieceTokenizer':
         assert args.tokenizer_model is not None
