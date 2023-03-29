@@ -57,7 +57,7 @@ GPT_ARGS="\
        --lr 0.0003 \
        --min-lr 0.00003 \
        --train-iters 250000 \
-       --lr-decay-iters 200000 \
+       --lr-decay-iters 250000 \
        --lr-decay-style cosine \
        --lr-warmup-iters 2000 \
        --weight-decay .1 \
