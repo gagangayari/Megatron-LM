@@ -46,7 +46,7 @@ GPT_ARGS="\
        --hidden-size 6144 \
        --num-attention-heads 48 \
        --attention-head-type multiquery \
-       --init-method-std 0.013 \
+       --init-method-std 0.01275 \
        --seq-length 8192 \
        --max-position-embeddings 8192 \
        --attention-dropout 0.1 \
