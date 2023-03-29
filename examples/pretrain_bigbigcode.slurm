@@ -55,6 +55,7 @@ GPT_ARGS="\
        --micro-batch-size 1 \
        --global-batch-size 512 \
        --lr 0.0003 \
+       --min-lr 0.00003 \
        --train-iters 200000 \
        --lr-decay-iters 200000 \
        --lr-decay-style cosine \
