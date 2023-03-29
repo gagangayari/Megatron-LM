@@ -33,7 +33,8 @@ WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 # File path setup
 CHECKPOINT_PATH=/fsx/leandro/experiments/bigcode-scaling/$SLURM_JOB_ID  # Adjust: Directory to store the checkpoints
-DATA_PATH=/fsx/leandro/data/santacoder/gpt2-preprocessed_content_document  # Adjust: Prefix of the preprocessed dataset.
+WEIGHTS_TRAIN=/fsx/loubna/code/bigcode-data-mix/data/train_data_paths.txt.tmp
+WEIGHTS_VALID=/fsx/loubna/code/bigcode-data-mix/data/valid_data_paths.txt.tmp
 TOKENIZER_FILE=/fsx/leandro/data/tokenizers/tokenizer-the-stack-march-sample-v3-no-prefix-spaces/tokenizer.json # Adjust
 
 mkdir $CHECKPOINT_PATH
@@ -77,11 +78,12 @@ TENSORBOARD_ARGS="--tensorboard-dir ${CHECKPOINT_PATH}/tensorboard"
 CMD=" \
     pretrain_gpt.py \
     $GPT_ARGS \
-    --tokenizer-type TokenizerFromFileWithFIM \
+    --tokenizer-type TokenizerFromFile \
     --tokenizer-file $TOKENIZER_FILE \
     --save $CHECKPOINT_PATH \
     --load $CHECKPOINT_PATH \
-    --data-path $DATA_PATH \
+    --train-weighted-split-paths-path $WEIGHTS_TRAIN \
+    --valid-weighted-split-paths-path $WEIGHTS_VALID \
     $TENSORBOARD_ARGS \
     --wandb-entity-name lvwerra \
     --wandb-project-name bigcode-scaling \
