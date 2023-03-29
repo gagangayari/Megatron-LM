@@ -85,6 +85,9 @@ CMD=" \
     --load $CHECKPOINT_PATH \
     --train-weighted-split-paths-path $WEIGHTS_TRAIN \
     --valid-weighted-split-paths-path $WEIGHTS_VALID \
+    --valid_num_workers 0 \
+    --structured-logs \
+    --structured-logs-dir $CHECKPOINT_PATH/logs \
     $TENSORBOARD_ARGS \
     --wandb-entity-name lvwerra \
     --wandb-project-name bigcode-scaling \
