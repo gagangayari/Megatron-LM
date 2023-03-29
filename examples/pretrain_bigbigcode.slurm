@@ -69,7 +69,7 @@ GPT_ARGS="\
        --log-interval 10 \
        --save-interval 2500 \
        --eval-interval 2500 \
-       --eval-iters 5 \
+       --eval-iters 2 \
        --use-distributed-optimizer \
        --num-layers-per-virtual-pipeline-stage 5 \
 "
