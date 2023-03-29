@@ -56,7 +56,7 @@ GPT_ARGS="\
        --global-batch-size 512 \
        --lr 0.0003 \
        --min-lr 0.00003 \
-       --train-iters 200000 \
+       --train-iters 250000 \
        --lr-decay-iters 200000 \
        --lr-decay-style cosine \
        --lr-warmup-iters 2000 \
@@ -67,9 +67,9 @@ GPT_ARGS="\
        --use-flash-attn \
        --fim-rate 0.5 \
        --log-interval 10 \
-       --save-interval 4000 \
-       --eval-interval 200 \
-       --eval-iters 10 \
+       --save-interval 2500 \
+       --eval-interval 2500 \
+       --eval-iters 5 \
        --use-distributed-optimizer \
        --num-layers-per-virtual-pipeline-stage 5 \
 "
