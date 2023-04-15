@@ -105,7 +105,7 @@ def get_batch(data):
             counts = torch.unique_consecutive(b, return_counts=True, dim=-1)[1]
             p = torch.cat([torch.arange(c) for c in counts])
             position_ids.append(p)
-        position_ids = torch.stack(position_ids)
+        position_ids = torch.stack(position_ids).to(tokens.device)
 
 
     #if args.position_embedding_type not in [PositionEmbeddingType.alibi, PositionEmbeddingType.rotary]:
