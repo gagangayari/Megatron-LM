@@ -9,7 +9,7 @@ from megatron import get_tokenizer
 
 from megatron import get_args, get_tokenizer, print_rank_0, mpu
 from megatron.data.decoder_packed_mtf_dataset import build_train_valid_test_datasets, build_dataset_group
-from megatron.model.enums import PositionEmbeddingType
+from megatron.model.enums import PositionEmbeddingType, AttnMaskType
 #from megatron.model import GPTModelPipe
 from megatron.model import GPTModel, ModelType
 from megatron.training import pretrain
@@ -28,7 +28,8 @@ def model_provider(pre_process=True, post_process=True):
         num_tokentypes=0,
         parallel_output=True,
         pre_process=pre_process,
-        post_process=post_process
+        post_process=post_process,
+        attn_mask_type=AttnMaskType.custom,
     )
     return model
 
