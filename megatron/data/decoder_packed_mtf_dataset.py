@@ -11,6 +11,7 @@ from megatron.data.dataset_utils import get_datasets_weights_and_num_samples, ge
 from megatron.data.mtf_dataset import MTFDataset
 from megatron.data.indexed_dataset import make_dataset as make_indexed_dataset
 
+import logging
 logger = logging.get_logger(__name__)
 
 def build_train_valid_test_datasets(
