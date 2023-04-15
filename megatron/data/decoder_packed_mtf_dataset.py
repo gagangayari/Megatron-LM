@@ -4,7 +4,7 @@ import time
 import numpy as np
 import torch
 
-from megatron import print_rank_0, mpu, logging
+from megatron import print_rank_0, mpu
 from megatron.data.blendable_dataset import BlendableDataset
 from megatron.data.dataset_utils import get_datasets_weights_and_num_samples, get_split_by_range_, \
     get_train_valid_test_split_
