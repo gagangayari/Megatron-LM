@@ -76,8 +76,8 @@ def get_batch(data):
         args.reset_position_ids,
         args.reset_attention_mask,
         args.eod_mask_loss,
-        prefix_indices=None,
-        loss_on_targets_only=False # This is done below
+        #prefix_indices=None,
+        #loss_on_targets_only=False # This is done below
     )
     # Only compute loss over causal target tokens, i.e. ignore input_tokens & padding
     loss_on_targets_only = ~data_c["decoder_is_inputs"][:, 1:]
