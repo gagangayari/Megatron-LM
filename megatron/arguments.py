@@ -774,7 +774,8 @@ def _add_checkpointing_args(parser):
     group.add_argument('--finetune-from', type=str, default=None,
                        help='Directory containing a model checkpoint for finetuning.'
                        'Will be loaded if the `--load` directory contains no checkpoint')
-
+    group.add_argument('--reset-progress', action='store_true', default=None,
+                       help='Reset iteration to 0 & do not load args.')
     return parser
 
 
