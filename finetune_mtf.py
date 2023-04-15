@@ -85,8 +85,7 @@ def get_batch(data):
     loss_mask *= loss_on_targets_only * loss_on_non_pad_only
 
     attention_mask = get_packed_attention_mask(
-        # Run non-causal decoder
-        is_causal=not(args.prefixlm),
+        is_causal=True, # Always make it causal for now; Could ablate this
         causal_mask=~(causal_mask.bool()), # Turn back into tril being ones
         decoder_is_inputs=decoder_is_inputs.bool(),
         segment_ids=segment_ids.long(),
