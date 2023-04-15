@@ -326,6 +326,8 @@ class _HFTokenizer(AbstractTokenizer):
         self.tokenizer = PreTrainedTokenizerFast(tokenizer_file=tokenizer_file, errors='replace', max_len=None)
         self.tokenizer.add_special_tokens({'additional_special_tokens': special_tokens})
         self.eod_id = self.tokenizer.vocab[EOD]
+        if FIM_PAD in self.tokenizer.vocab:
+            self.pad_id = self.tokenizer.vocab[FIM_PAD]
         # Token->id mapping for additional special-tokens
         self.special_tokens = {
             tok: self.tokenizer.vocab[tok] for tok in special_tokens
@@ -353,3 +355,10 @@ class _HFTokenizer(AbstractTokenizer):
     @property
     def eod(self):
         return self.eod_id
+    
+    @property
+    def pad(self):
+        if hasattr(self, 'pad_id'):
+            return self.pad_id
+        else:
+            raise ValueError('PAD token not found in the vocabulary')
