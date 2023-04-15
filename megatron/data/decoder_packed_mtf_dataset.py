@@ -12,7 +12,6 @@ from megatron.data.mtf_dataset import MTFDataset
 from megatron.data.indexed_dataset import make_dataset as make_indexed_dataset
 
 import logging
-logger = logging.get_logger(__name__)
 
 def build_train_valid_test_datasets(
     data_prefix,
@@ -490,7 +489,7 @@ def _build_sample_idx(mtf_dataset, document_ids, seq_length, row_offset, old_sam
                 # TODO @thomasw21 handle the case where a single sample cannot fit inside a row. We can
                 #   - silently skip that value [currently implemented]
                 #   - truncate to `seq_length`, and keep the right part
-                logger.warning(f"Skipping sample id={document_id}. Maximum sequence length: {seq_length}, sample length: {tok_len}")
+                logging.warning(f"Skipping sample id={document_id}. Maximum sequence length: {seq_length}, sample length: {tok_len}")
                 current_sample_start = current_sample_end + 1  # skipping
                 row_length = 0
                 continue
