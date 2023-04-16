@@ -538,6 +538,9 @@ class Float16OptimizerWithFloat16Params(MixedPrecisionOptimizer):
             params_have_main_grad, use_contiguous_buffers_in_local_ddp,
             fp16, bf16, grad_scaler, models)
 
+
+    def init_param_groups(self):
+
         # ======================
         # main parameter stuff
         # ======================

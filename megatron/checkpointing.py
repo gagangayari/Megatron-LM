@@ -581,7 +581,7 @@ def load_checkpoint(model, optimizer, opt_param_scheduler, load_arg='load', stri
     set_checkpoint_version(model_state_dict.get('checkpoint_version', 0))
 
     # Set iteration.
-    if args.finetune or release:
+    if args.finetune or release or args.reset_progress:
         iteration = 0
     else:
         try:

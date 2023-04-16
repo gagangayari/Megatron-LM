@@ -394,6 +394,10 @@ def setup_model_and_optimizer(model_provider_func,
     else:
         args.iteration = 0
 
+    # Init param groups
+    if hasattr(optimizer, 'init_param_groups'):
+        optimizer.init_param_groups()
+
     # We only support local DDP with multiple micro-batches.
     if len(model) > 1 or mpu.get_pipeline_model_parallel_world_size() > 1:
         assert args.DDP_impl == 'local'
