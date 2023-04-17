@@ -699,6 +699,8 @@ class Float16OptimizerWithFloat16Params(MixedPrecisionOptimizer):
 
 
     def load_state_dict(self, state_dict):
+        if not hasattr(self, 'fp32_from_float16_groups'):
+            self.init_param_groups()
         # Optimizer.
         optimizer_key = 'optimizer'
         if optimizer_key not in state_dict:
