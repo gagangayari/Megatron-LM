@@ -19,6 +19,25 @@ from megatron.utils import average_losses_across_data_parallel_group
 #import deepspeed
 #from deepspeed.runtime.utils import see_memory_usage
 
+### Debugging Helpers ###
+
+def visualize_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids):
+    tok = get_tokenizer()
+    print("TOKENS:", ",".join([tok.detokenize(tokens[0, i]) for i in range(100)]))
+    print("ATTN:", attention_mask[0, :, :100, :100])
+    print("LABS:", labels[0, :100])
+    print("LOSSMSK:", loss_mask[:100])
+    print("POSIDS:", position_ids[0, :100])
+
+def save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, segment_ids):
+    """Save as tensors for debugging"""
+    torch.save(tokens, "tokens.pt")
+    torch.save(attention_mask, "attention_mask.pt")
+    torch.save(labels, "labels.pt")
+    torch.save(loss_mask, "loss_mask.pt")
+    torch.save(position_ids, "position_ids.pt")
+    torch.save(segment_ids, "segment_ids.pt")
+    exit()
 
 def model_provider(pre_process=True, post_process=True):
     """Build the model."""
@@ -81,9 +100,12 @@ def get_batch(data):
         #loss_on_targets_only=False # This is done below
     )
     # Only compute loss over causal target tokens, i.e. ignore input_tokens & padding
-    loss_on_targets_only = ~data_c["decoder_is_inputs"][:, 1:]
     loss_on_non_pad_only = (labels != tokenizer.pad)
-    loss_mask *= loss_on_targets_only * loss_on_non_pad_only
+    if args.loss_on_targets_only:
+        loss_on_targets_only = ~data_c["decoder_is_inputs"][:, 1:]
+        loss_mask *= loss_on_targets_only * loss_on_non_pad_only
+    else:
+        loss_mask *= loss_on_non_pad_only
 
     attention_mask = get_packed_attention_mask(
         is_causal=True, # Always make it causal for now; Could ablate this
@@ -111,6 +133,9 @@ def get_batch(data):
 
     #if args.position_embedding_type not in [PositionEmbeddingType.alibi, PositionEmbeddingType.rotary]:
     #    raise NotImplementedError("absolute positional embeddings require us to reset position_ids accordingly.")
+
+    # visualize_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids)
+    # save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, segment_ids)
 
     return tokens, labels, loss_mask, attention_mask, position_ids
     #return (tokens, position_ids, attention_mask), (labels, loss_mask)
