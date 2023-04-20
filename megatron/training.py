@@ -153,12 +153,6 @@ def pretrain(train_valid_test_dataset_provider,
     print_rank_0('done with setup ...')
     timers.log(['model-and-optimizer-setup', 'train/valid/test-data-iterators-setup'])
     print_rank_0('training ...')
-    
-    print(f"{len(model)}")
-    print(f"{len(model[0])}")
-    print(f"{model[0].keys()}")
-    print(f"{model[0]['language_model']['embedding']['word_embeddings']['weight'][0,:10]}")
-
     iteration = 0
     if args.do_train and args.train_iters > 0:
         iteration = train(forward_step_func,
