@@ -44,8 +44,7 @@ def model_provider(pre_process=True, post_process=True):
         parallel_output=True,
         pre_process=pre_process,
         post_process=post_process,
-        #attn_mask_type=AttnMaskType.custom,
-        attn_mask_type=AttnMaskType.causal,
+        attn_mask_type=AttnMaskType.custom,
     )
     return model
 
