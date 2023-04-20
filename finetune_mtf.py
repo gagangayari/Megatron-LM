@@ -10,14 +10,10 @@ from megatron import get_tokenizer
 from megatron import get_args, get_tokenizer, print_rank_0, mpu
 from megatron.data.decoder_packed_mtf_dataset import build_train_valid_test_datasets, build_dataset_group
 from megatron.model.enums import PositionEmbeddingType, AttnMaskType
-#from megatron.model import GPTModelPipe
 from megatron.model import GPTModel, ModelType
 from megatron.training import pretrain
 from megatron.utils import get_ltor_masks_and_position_ids, get_packed_attention_mask
 from megatron.utils import average_losses_across_data_parallel_group
-
-#import deepspeed
-#from deepspeed.runtime.utils import see_memory_usage
 
 ### Debugging Helpers ###
 
@@ -37,7 +33,7 @@ def save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, s
     torch.save(loss_mask, f"loss_mask_{iteration}.pt")
     torch.save(position_ids, f"position_ids_{iteration}.pt")
     torch.save(segment_ids, f"segment_ids_{iteration}.pt")
-    #exit()
+    # exit() # Optionaly exit right after
 
 def model_provider(pre_process=True, post_process=True):
     """Build the model."""
@@ -97,8 +93,6 @@ def get_batch(data):
         args.reset_position_ids,
         args.reset_attention_mask,
         args.eod_mask_loss,
-        #prefix_indices=None,
-        #loss_on_targets_only=False # This is done below
     )
     # Only compute loss over causal target tokens, i.e. ignore input_tokens & padding
     loss_on_non_pad_only = (labels != tokenizer.pad)
@@ -119,6 +113,7 @@ def get_batch(data):
         loss_mask = loss_mask.view(-1)
         loss_mask = fast_normalize(loss_mask)
 
+    # For Alibi / Rotary, positions ids are not used so it does not matter
     if args.position_embedding_type == PositionEmbeddingType.absolute:
         # Create position ids from segment_ids
         # segment_ids = torch.tensor([[1, 1, 1, 2, 2, 2, 2, 0]]) (Shape: (batch_size, seq_len))
@@ -129,13 +124,8 @@ def get_batch(data):
             counts = torch.unique_consecutive(b, return_counts=True, dim=-1)[1]
             p = torch.cat([torch.arange(c) for c in counts])
             position_ids.append(p)
-        position_ids = torch.stack(position_ids).to(tokens.device)
+        position_ids = torch.stack(position_ids).to(tokens.device)    
 
-
-    #if args.position_embedding_type not in [PositionEmbeddingType.alibi, PositionEmbeddingType.rotary]:
-    #    raise NotImplementedError("absolute positional embeddings require us to reset position_ids accordingly.")
-    
-    #if (7140 < args.curr_iteration < 7150) or (6420 < args.curr_iteration < 6430):
     #visualize_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids)
     #if torch.distributed.is_initialized() and torch.distributed.get_rank() == 0:
     #    save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, segment_ids, args.curr_iteration)
@@ -192,7 +182,7 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
             seed=args.seed,
             skip_warmup=(not args.mmap_warmup)
         )
-        # Option 2 of data loading using --(train|valid|test)-weighted-split-paths
+    # Option 2 of data loading using --(train|valid|test)-weighted-split-paths
     elif args.train_weighted_split_paths:
         assigned_train_valid_test = []
         if args.train_weighted_split_paths is not None:
