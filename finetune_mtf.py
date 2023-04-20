@@ -29,15 +29,15 @@ def visualize_model_inputs(tokens, attention_mask, labels, loss_mask, position_i
     print("LOSSMSK:", loss_mask[:100])
     print("POSIDS:", position_ids[0, :100])
 
-def save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, segment_ids):
+def save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, segment_ids, iteration):
     """Save as tensors for debugging"""
-    torch.save(tokens, "tokens.pt")
-    torch.save(attention_mask, "attention_mask.pt")
-    torch.save(labels, "labels.pt")
-    torch.save(loss_mask, "loss_mask.pt")
-    torch.save(position_ids, "position_ids.pt")
-    torch.save(segment_ids, "segment_ids.pt")
-    exit()
+    torch.save(tokens, f"tokens_{iteration}.pt")
+    torch.save(attention_mask, f"attention_mask_{iteration}.pt")
+    torch.save(labels, f"labels_{iteration}.pt")
+    torch.save(loss_mask, f"loss_mask_{iteration}.pt")
+    torch.save(position_ids, f"position_ids_{iteration}.pt")
+    torch.save(segment_ids, f"segment_ids_{iteration}.pt")
+    #exit()
 
 def model_provider(pre_process=True, post_process=True):
     """Build the model."""
@@ -48,7 +48,8 @@ def model_provider(pre_process=True, post_process=True):
         parallel_output=True,
         pre_process=pre_process,
         post_process=post_process,
-        attn_mask_type=AttnMaskType.custom,
+        #attn_mask_type=AttnMaskType.custom,
+        attn_mask_type=AttnMaskType.causal,
     )
     return model
 
@@ -133,9 +134,11 @@ def get_batch(data):
 
     #if args.position_embedding_type not in [PositionEmbeddingType.alibi, PositionEmbeddingType.rotary]:
     #    raise NotImplementedError("absolute positional embeddings require us to reset position_ids accordingly.")
-
-    # visualize_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids)
-    # save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, segment_ids)
+    
+    #if (7140 < args.curr_iteration < 7150) or (6420 < args.curr_iteration < 6430):
+    #visualize_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids)
+    #if torch.distributed.is_initialized() and torch.distributed.get_rank() == 0:
+    #    save_model_inputs(tokens, attention_mask, labels, loss_mask, position_ids, segment_ids, args.curr_iteration)
 
     return tokens, labels, loss_mask, attention_mask, position_ids
     #return (tokens, position_ids, attention_mask), (labels, loss_mask)

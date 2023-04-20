@@ -384,7 +384,7 @@ def setup_model_and_optimizer(model_provider_func,
         torch.distributed.barrier()
         timers('load-checkpoint').start()
         # Optimizer is not loaded hence not needed
-        args.iteration = load_checkpoint(unwrapped_model, None, None)
+        args.iteration = load_checkpoint(model, None, None)
         torch.distributed.barrier()
         timers('load-checkpoint').stop()
         timers.log(['load-checkpoint'])
