@@ -553,10 +553,9 @@ class ParallelAttention(MegatronModule):
                 init_method=init_method)
         elif attention_type == AttnType.self_attn and self.attention_head_type == 'multiquery':
             # TODO: Find a way to merge the query and key-value computations?
-            self.query = mpu.ColumnParallelLinear(
+            self.query = get_linear_layer(
                 args.hidden_size,
                 projection_size,
-                gather_output=False,
                 init_method=init_method)
             # In MultiQuery attention, keys and values are shared across heads
             # Use args.kv_channels instead of projection_size
