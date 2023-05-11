@@ -32,6 +32,7 @@ from megatron.model.utils import attention_mask_func, openai_gelu, erf_gelu, get
 
 
 from .glu_activations import GLU_ACTIVATIONS
+from ..mpu import copy_to_tensor_model_parallel_region, LinearWithGradAccumulationAndAsyncCommunication
 
 # flags required to enable jit fusion kernels
 torch._C._jit_set_profiling_mode(False)
@@ -565,6 +566,11 @@ class ParallelAttention(MegatronModule):
                 args.hidden_size,
                 2 * args.kv_channels,
                 init_method=init_method)
+
+            self.async_tensor_model_parallel_allreduce = args.async_tensor_model_parallel_allreduce and world_size > 1
+            self.sequence_parallel = args.sequence_parallel and world_size > 1
+            self.gradient_accumulation_fusion = args.gradient_accumulation_fusion
+
         elif attention_type == AttnType.cross_attn and self.attention_head_type == 'multihead':
             assert attention_type == AttnType.cross_attn
             self.query = mpu.ColumnParallelLinear(
@@ -686,28 +692,17 @@ class ParallelAttention(MegatronModule):
              key_layer,
              value_layer) = mpu.split_tensor_along_last_dim(mixed_x_layer, 3)
         elif self.attention_type == AttnType.self_attn and self.attention_head_type == 'multiquery':
-            kv_input=hidden_states
+            kv_input = hidden_states
+
+            # Manually handle communication of kv_input
+            if self.async_tensor_model_parallel_allreduce or \
+                    self.sequence_parallel:
+                kv_input = kv_input
+            else:
+                kv_input = copy_to_tensor_model_parallel_region(kv_input)
+
             # Attention heads [sq, b, h] --> [sq, b, (2 * hn)]
             mixed_kv_layer = self.key_value(kv_input)
-
-            # Reduce the KV gradients in the tensor-parallel direction.
-            # This is different from multi-head attention which reduces the KV input,
-            # because the sum over attn heads happens in the attn weight gradient instead of the KV layer:
-            #   A [b, n * sq, sk] = Q [b, n * sq, hn] x K^T [b, hn, sk]
-            #   G_K [b, sk, hn] = G_A [b, sk, n * sq] x Q [b, n * sq, hn]
-            #                   = sum_p (G_Ap [b, sk, np * sq] x Q_p [b, np * sq, hn])
-            if get_args().sequence_parallel:
-                # We switch to the tensor parallel regime here instead of at the KV input
-                # so that the KV layer is done in parallel instead of just duplicated.
-                mixed_kv_layer = mpu.gather_from_sequence_parallel_region(mixed_kv_layer, tensor_parallel_output_grad=True)
-            else:
-                mixed_kv_layer = mpu.copy_to_tensor_model_parallel_region(mixed_kv_layer)
-
-            # [sq, b, (2 * hn)] --> [sq, b, np (expanded), 2 * hn]
-            # new_tensor_shape = mixed_kv_layer.size()[:-1] + \
-            #     (self.num_attention_heads_per_partition,
-            #      2 * self.hidden_size_per_attention_head)
-            # mixed_kv_layer = mixed_kv_layer.unsqueeze(2).expand(*new_tensor_shape)
 
             # [sq, b, (2 * hn)] --> [sq, b, 1, 2 * hn]
             new_tensor_shape = mixed_kv_layer.size()[:-1] + \
@@ -720,7 +715,9 @@ class ParallelAttention(MegatronModule):
              value_layer) = mpu.split_tensor_along_last_dim(mixed_kv_layer, 2)
 
             # Attention head [sq, b, h] --> [sq, b, np * hn]
-            query_layer, _ = self.query(hidden_states)
+            query_layer = LinearWithGradAccumulationAndAsyncCommunication.apply(
+                kv_input, self.query.weight, self.query.bias, self.gradient_accumulation_fusion,
+                self.async_tensor_model_parallel_allreduce, self.sequence_parallel)
             # [sq, b, np * hn] --> [sq, b, np, hn]
             new_tensor_shape = query_layer.size()[:-1] + \
                 (self.num_attention_heads_per_partition,
