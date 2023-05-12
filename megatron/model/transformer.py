@@ -700,8 +700,16 @@ class ParallelAttention(MegatronModule):
             else:
                 kv_input = copy_to_tensor_model_parallel_region(kv_input)
 
+            # TODO @thomasw21: This is stupid because `LinearWithGradAccumulationAndAsyncCommunication` also all_gathers the activations
+            if self.sequence_parallel:
+                kv_input_gathered = mpu.gather_from_sequence_parallel_region(
+                    kv_input,
+                    tensor_parallel_output_grad=True)
+            else:
+                kv_input_gathered = kv_input
+
             # Attention heads [sq, b, h] --> [sq, b, (2 * hn)]
-            mixed_kv_layer = self.key_value(kv_input)
+            mixed_kv_layer = self.key_value(kv_input_gathered)
 
             # [sq, b, (2 * hn)] --> [sq, b, 1, 2 * hn]
             new_tensor_shape = mixed_kv_layer.size()[:-1] + \
