@@ -126,7 +126,8 @@ def build_dataset_group(dataset_group_name, paths, weights, splits, data_impl,
                                           data_impl,
                                           train_valid_test_num_samples,
                                           seq_length, seed, skip_warmup,
-                                          dataset_group_name, train_valid_test)
+                                          dataset_group_name, train_valid_test,
+                                          data_cache_path=data_cache_path)
         return dataset
     # Blending dataset.
     else:
@@ -150,7 +151,8 @@ def build_dataset_group(dataset_group_name, paths, weights, splits, data_impl,
                                         datasets_train_valid_test_num_samples[i],
                                         seq_length,
                                         seed, skip_warmup,
-                                        dataset_group_name, train_valid_test)
+                                        dataset_group_name, train_valid_test,
+                                        data_cache_path=data_cache_path)
 
             # ds can be none if the dataset is so small that not a single document
             # is present in the split.
