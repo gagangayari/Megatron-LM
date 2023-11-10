@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=1b-starcoder2
+#SBATCH --job-name=1B_starcoder2
 #SBATCH --nodes=32
 #SBATCH --ntasks-per-node=1          # crucial - only 1 task per dist per node!
 #SBATCH --gres=gpu:8
@@ -63,13 +63,14 @@ GPT_ARGS="\
        --num-attention-heads 16 \
        --attention-head-type multiquery \
        --init-method-std 0.02209 \
-       --seq-length 8192 \
-       --max-position-embeddings 8192 \
+       --seq-length 4096 \
+       --max-position-embeddings 4096 \
        --use-rotary-position-embeddings \
+       --rotary-theta 100000 \
        --attention-dropout 0.1 \
        --hidden-dropout 0.1 \
-       --micro-batch-size 2 \
-       --global-batch-size 512 \
+       --micro-batch-size 4 \
+       --global-batch-size 1024 \
        --lr 0.0004 \
        --min-lr 0.00004 \
        --train-iters 500000 \
