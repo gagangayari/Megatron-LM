@@ -38,9 +38,7 @@ torchrun $DISTRIBUTED_ARGS tools/run_text_generation_server.py   \
        --tokenizer-file $TOKENIZER_FILE \
        --bf16  \
        --micro-batch-size 1  \
-       --seq-length 1024  \
        --out-seq-length 512  \
        --temperature 0  \
-       --top_p 0.9  \
        --seed 42
        --output_file 
