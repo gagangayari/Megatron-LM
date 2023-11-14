@@ -7,10 +7,10 @@ NUM_SAMPLES_PER_TASK = 1
 stop_tokens = ["\nclass", "\ndef", "\n#", "\n@", "\nprint", "\nif", "\n```", "<filename>", "<file_sep>", "<|endoftext|>"]
 
 
-def query_server(prompt):
+def query_server(prompt, temperature=0.1):
     url = 'http://localhost:8080/api'
     headers = {'Content-Type': 'application/json; charset=UTF-8'}
-    data = {"prompts": [prompt], "tokens_to_generate": 512}
+    data = {"prompts": [prompt], "tokens_to_generate": 256, "temperature": 0.00001, "stop_token": 0, "random_seed": 1234}
     response = requests.put(url, json=data, headers=headers)
     result = json.loads(response.text)["text"]
     return result[0]
@@ -50,9 +50,7 @@ def main():
     prompts = [
                 problems[task_id]["prompt"]
                 for task_id in problems
-                for _ in range(NUM_SAMPLES_PER_TASK)
             ]
-
     errors = []
     success = 0
     generations = []
@@ -74,10 +72,10 @@ def main():
 
     print(f"Done! {success} successful problems out of {len(prompts)}, failed are: {errors}")
 
-    with open('megatron_generations.json', 'w') as f:
+    with open('megatron_generations_fixtemp_50.json', 'w') as f:
         json.dump(generations, f)
 
-    with open('megatron_postprocessed_generations.json', 'w') as f:
+    with open('megatron_postprocessed_generations_fixtemp_50.json', 'w') as f:
         json.dump(postprocessed_generations, f)
     
 

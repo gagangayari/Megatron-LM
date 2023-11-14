@@ -4,7 +4,7 @@
 DISTRIBUTED_ARGS="--nproc_per_node 1 \
                   --nnodes 1 \
                   --node_rank 0 \
-                  --master_addr ip-26-0-156-56 \
+                  --master_addr ip-26-0-156-228 \
                   --master_port 6000"
 
 
@@ -38,9 +38,6 @@ torchrun $DISTRIBUTED_ARGS tools/run_text_generation_server.py   \
        --tokenizer-file $TOKENIZER_FILE \
        --bf16  \
        --micro-batch-size 1  \
-       --seq-length 1024  \
        --out-seq-length 512  \
-       --temperature 0  \
-       --top_p 0.9  \
        --seed 42
        --output_file 
