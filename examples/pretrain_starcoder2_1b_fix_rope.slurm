@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=1B_test
-#SBATCH --nodes=1
+#SBATCH --nodes=32
 #SBATCH --ntasks-per-node=1          # crucial - only 1 task per dist per node!
 #SBATCH --gres=gpu:8
 #SBATCH --exclusive 
@@ -47,7 +47,7 @@ NODE_RANK=$SLURM_PROCID
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
 # File path setup
-CHECKPOINT_PATH=/fsx/bigcode/experiments/pretraining/starcoder2-1B/checkpoints_fix  # Adjust: Directory to store the checkpoints
+CHECKPOINT_PATH=/fsx/bigcode/experiments/pretraining/starcoder2-1B/checkpoints_fix_rope  # Adjust: Directory to store the checkpoints
 # Starcoder2 tokenizer and data paths in /fsx/bigcode
 TOKENIZER_FILE=/fsx/loubna/data/tokenizer/starcoder2-smol-internal-1/tokenizer.json 
 WEIGHTS_TRAIN=/fsx/loubna/bigcode_2/code/bigcode-data-mix/data/train_data_paths.txt.tmp
@@ -71,8 +71,8 @@ GPT_ARGS="\
        --no-position-embedding \
        --attention-dropout 0.1 \
        --hidden-dropout 0.1 \
-       --micro-batch-size 1 \
-       --global-batch-size 8 \
+       --micro-batch-size 4 \
+       --global-batch-size 1024 \
        --lr 0.0004 \
        --min-lr 0.00004 \
        --train-iters 500000 \
