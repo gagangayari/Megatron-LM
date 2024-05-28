@@ -45,6 +45,8 @@ The following table shows both model (MFU) and hardware (HFU) FLOPs utilization 
       * [FlashAttention](#flashattention)
       * [GPT-3 Example](#gpt-3-example)
       * [Retro](#retro)
+      * [NT-Java Finetuning](#nt-java-finetuning)
+
    * [Evaluation and Tasks](#evaluation-and-tasks)
       * [GPT Text Generation](#gpt-text-generation)
       * [GPT Evaluation](#gpt-evaluation)
@@ -167,6 +169,17 @@ Very similar to BERT and GPT, the `examples/pretrain_t5.sh` script runs single G
 * `--encoder-seq-length` and `--decoder-seq-length` set the sequence length for the encoder and decoder separately.
 
 All of the other arguments remain as they were for BERT and GPT pretraining. Run this example with the same steps described above for the other scripts.
+
+## NT\-Java Finetuning
+
+The NT-Java-1B model is a fine-tuned variant of the starcoderbase-1.1B model, fine-tuned specifically with Java subset of [the stack](https://huggingface.co/datasets/bigcode/the-stack). The fine-tuning process for NT-Java-1B employs the parameters detailed in the `examples/finetune_javalm.sh` script.
+
+To facilitate compatibility with the Megatron-LM training framework, a megatron format checkpoint was created using the script `tools/convert_hf_mgt.py`, which converts the Huggingface (HF) checkpoint available on [Huggingface](https://huggingface.co/bigcode/starcoderbase-1b).
+
+```
+python tools convert_hf_mgt.py hf_ckpt=<hf_ckpt_path> output_dir=<output_path>
+```
+
 
 ## Distributed Pretraining
 
