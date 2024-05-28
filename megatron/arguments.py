@@ -41,6 +41,7 @@ def parse_args(extra_args_provider=None, ignore_unknown_args=False):
     parser = _add_inference_args(parser)
     parser = _add_transformer_engine_args(parser)
     parser = _add_retro_args(parser)
+    parser = _add_conversion_args(parser)
 
     # Custom arguments.
     if extra_args_provider is not None:
@@ -453,6 +454,12 @@ def _print_args(title, args):
 
 def _check_arg_is_not_none(args, arg):
     assert getattr(args, arg) is not None, '{} argument is None'.format(arg)
+
+
+def _add_conversion_args(parser):
+    ##do something
+    return parser
+
 
 
 def _add_transformer_engine_args(parser):
