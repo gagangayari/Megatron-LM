@@ -44,8 +44,8 @@ The following table shows both model (MFU) and hardware (HFU) FLOPs utilization 
       * [Distributed Optimizer](#distributed-optimizer)
       * [FlashAttention](#flashattention)
       * [GPT-3 Example](#gpt-3-example)
+      * [NT-Java-1B Finetuning](#nt-java-1b-finetuning)
       * [Retro](#retro)
-      * [NT-Java Finetuning](#nt-java-finetuning)
 
    * [Evaluation and Tasks](#evaluation-and-tasks)
       * [GPT Text Generation](#gpt-text-generation)
@@ -170,16 +170,6 @@ Very similar to BERT and GPT, the `examples/pretrain_t5.sh` script runs single G
 
 All of the other arguments remain as they were for BERT and GPT pretraining. Run this example with the same steps described above for the other scripts.
 
-## NT\-Java Finetuning
-
-The NT-Java-1B model is a fine-tuned variant of the starcoderbase-1.1B model, fine-tuned specifically with Java subset of [the stack](https://huggingface.co/datasets/bigcode/the-stack). The fine-tuning process for NT-Java-1B employs the parameters detailed in the `examples/finetune_javalm.sh` script.
-
-To facilitate compatibility with the Megatron-LM training framework, a megatron format checkpoint was created using the script `tools/convert_hf_mgt.py`, which converts the Huggingface (HF) checkpoint available on [Huggingface](https://huggingface.co/bigcode/starcoderbase-1b).
-
-```
-python tools convert_hf_mgt.py hf_ckpt=<hf_ckpt_path> output_dir=<output_path>
-```
-
 
 ## Distributed Pretraining
 
@@ -244,6 +234,18 @@ In `examples/pretrain_gpt3_175B.sh` we have provided an example of how to config
 With full global batch size of 1536 on 1024 A100 GPUs, each iteration takes around 32 seconds resulting in 138 teraFLOPs per GPU which is 44% of the theoretical peak FLOPs.
 
 
+## NT-Java-1B Finetuning
+
+The NT-Java-1B model is a finetuned variant of the starcoderbase-1b model, trained specifically with Java subset of [the stack](https://huggingface.co/datasets/bigcode/the-stack). The finetuning process for NT-Java-1B employs the parameters detailed in the `examples/finetune_javalm.sh` script. The training uses data parallelism mode of training utilizing a node of 8 A100 GPUs. It begins with a learning rate of 10<sup>-4</sup> decreasing to 10<sup>-6</sup> following a cosine scheduler.
+
+To facilitate compatibility with the Megatron-LM training framework, a megatron format checkpoint was created using the script `tools/convert_hf_mgt.py`, which converts the Huggingface (HF) checkpoint available on [bigcode/starcoderbase-1b](https://huggingface.co/bigcode/starcoderbase-1b).
+
+```
+python tools convert_hf_mgt.py hf_ckpt=<hf_ckpt_path> output_dir=<output_path>
+```
+
+
+
 ## Retro
 
 See:
@@ -256,6 +258,9 @@ See:
 Retro is a retrieval-enhanced model that is based on GPT. As described in [Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426), Retro retrieves from a database of document chunks by performing locality search using a sample's tokens. The retrieval database can be large -- often billions or even trillions of tokens -- and provides a more efficient storage mechanism of factual knowledge, when compared to storing factual knowledge implicitly within the network's parameters.
 
 Using Retro requires two steps: 1) preprocessing the retrieval database and pretraining neighbors, and 2) pretraining a model using this data. Please see `tools/retro/README.md` for a detailed overview.
+
+
+
 
 <!--
 ## REALM Pipeline
