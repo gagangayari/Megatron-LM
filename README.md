@@ -238,10 +238,10 @@ With full global batch size of 1536 on 1024 A100 GPUs, each iteration takes arou
 
 The NT-Java-1.1B model is built by extending pretraining on StarCoderBase-1.1B with Java dataset from [the stack](https://huggingface.co/datasets/bigcode/the-stack). The training process for NT-Java-1.1B employs the parameters detailed in the `examples/finetune_javalm.sh` script. The training uses data parallelism mode of training utilizing 6 A100 GPUs. It begins with a learning rate of 10<sup>-4</sup> decreasing to 10<sup>-6</sup> following a cosine scheduler.
 
-To facilitate compatibility with the Megatron-LM training framework, a megatron format checkpoint was created using the script `tools/convert_hf_mgt.py`, which converts the Huggingface (HF) checkpoint available on [bigcode/starcoderbase-1b](https://huggingface.co/bigcode/starcoderbase-1b).
+To facilitate compatibility with the Megatron-LM training framework, a Megatron format checkpoint was created using the script `tools/convert_hf_mgt.py`, which converts the HuggingFace (HF) checkpoint available on [bigcode/starcoderbase-1b](https://huggingface.co/bigcode/starcoderbase-1b).
 
 ```
-python tools convert_hf_mgt.py hf_ckpt=<hf_ckpt_path> output_dir=<output_path>
+python tools/convert_hf_mgt.py hf_ckpt=<hf_ckpt_path> output_dir=<output_path>
 ```
 
 
