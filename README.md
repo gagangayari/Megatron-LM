@@ -44,7 +44,7 @@ The following table shows both model (MFU) and hardware (HFU) FLOPs utilization 
       * [Distributed Optimizer](#distributed-optimizer)
       * [FlashAttention](#flashattention)
       * [GPT-3 Example](#gpt-3-example)
-      * [NT-Java-1B Finetuning](#nt-java-1b-finetuning)
+      * [NT-Java-1.1B Extending Pretraining](#nt-java-11b-extending-pretraining)
       * [Retro](#retro)
 
    * [Evaluation and Tasks](#evaluation-and-tasks)
@@ -234,9 +234,9 @@ In `examples/pretrain_gpt3_175B.sh` we have provided an example of how to config
 With full global batch size of 1536 on 1024 A100 GPUs, each iteration takes around 32 seconds resulting in 138 teraFLOPs per GPU which is 44% of the theoretical peak FLOPs.
 
 
-## NT-Java-1B Finetuning
+## NT-Java-1.1B Extending Pretraining
 
-The NT-Java-1B model is a finetuned variant of the starcoderbase-1b model, trained specifically with Java subset of [the stack](https://huggingface.co/datasets/bigcode/the-stack). The finetuning process for NT-Java-1B employs the parameters detailed in the `examples/finetune_javalm.sh` script. The training uses data parallelism mode of training utilizing a node of 8 A100 GPUs. It begins with a learning rate of 10<sup>-4</sup> decreasing to 10<sup>-6</sup> following a cosine scheduler.
+The NT-Java-1.1B model is built by extending pretraining on StarCoderBase-1.1B with Java dataset from [the stack](https://huggingface.co/datasets/bigcode/the-stack). The training process for NT-Java-1.1B employs the parameters detailed in the `examples/finetune_javalm.sh` script. The training uses data parallelism mode of training utilizing 6 A100 GPUs. It begins with a learning rate of 10<sup>-4</sup> decreasing to 10<sup>-6</sup> following a cosine scheduler.
 
 To facilitate compatibility with the Megatron-LM training framework, a megatron format checkpoint was created using the script `tools/convert_hf_mgt.py`, which converts the Huggingface (HF) checkpoint available on [bigcode/starcoderbase-1b](https://huggingface.co/bigcode/starcoderbase-1b).
 
